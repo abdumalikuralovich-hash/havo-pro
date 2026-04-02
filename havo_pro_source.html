@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Havo Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f2f2f7;color:#1c1c1e;min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
+
+/* ── STATUS BAR ── */
+.statusbar{height:44px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:.5px solid #e5e5ea;position:sticky;top:0;z-index:200}
+.statusbar-time{font-size:15px;font-weight:700}
+.sb-icons{display:flex;align-items:center;gap:6px;font-size:12px;color:#1c1c1e}
+.battery{display:flex;align-items:center;gap:2px;font-size:11px;font-weight:600}
+
+/* ── HEADER ── */
+.header{background:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid #e5e5ea;position:sticky;top:44px;z-index:199}
+.header-title{font-size:17px;font-weight:700;color:#1c1c1e}
+.header-right{display:flex;gap:10px;align-items:center}
+.icon-btn{width:32px;height:32px;border-radius:50%;background:#f2f2f7;border:none;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer}
+
+/* ── PAGES ── */
+.page{display:none;padding-bottom:90px}
+.page.active{display:block}
+
+/* ── LANG / CITY ── */
+.lang-row{background:#fff;padding:8px 16px;display:flex;gap:8px;border-bottom:.5px solid #e5e5ea}
+.seg{display:flex;background:#e9e9eb;border-radius:9px;padding:2px;flex:1}
+.seg-btn{flex:1;padding:6px;border:none;background:transparent;border-radius:7px;font-size:13px;font-weight:500;color:#8e8e93;cursor:pointer;transition:all .2s}
+.seg-btn.active{background:#fff;color:#1c1c1e;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.city-scroll{background:#fff;padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:.5px solid #e5e5ea;scrollbar-width:none}
+.city-scroll::-webkit-scrollbar{display:none}
+.city-chip{padding:6px 14px;border-radius:20px;border:1px solid #e5e5ea;background:#f2f2f7;font-size:13px;font-weight:500;color:#8e8e93;white-space:nowrap;cursor:pointer;transition:all .2s}
+.city-chip.active{background:#007AFF;color:#fff;border-color:#007AFF}
+
+/* ── CONTENT ── */
+.content{padding:16px}
+.sec-label{font-size:12px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px}
+
+/* ── AQI CARD ── */
+.aqi-card{background:#fff;border-radius:20px;padding:18px;margin-bottom:12px}
+.aqi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.aqi-city-label{font-size:12px;color:#8e8e93;margin-bottom:2px}
+.aqi-city-name{font-size:22px;font-weight:700}
+.aqi-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-top:4px}
+.aqi-badge.good{background:#d4f5e2;color:#1a7a45}
+.aqi-badge.mod{background:#fff3cd;color:#856404}
+.aqi-badge.bad{background:#fde8e8;color:#c0392b}
+.aqi-right{text-align:right}
+.aqi-num-lbl{font-size:11px;color:#8e8e93}
+.aqi-big{font-size:52px;font-weight:700;line-height:1}
+.aqi-bar-bg{height:10px;border-radius:5px;background:linear-gradient(to right,#34c759,#ff9500,#ff3b30);position:relative;margin-bottom:5px}
+.aqi-dot{position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #1c1c1e;transform:translateX(-50%);transition:left .5s ease;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+.aqi-bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:#8e8e93}
+.aqi-status{font-size:13px;font-weight:500;margin-top:10px}
+
+/* ── METRICS ── */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mcard{background:#fff;border-radius:16px;padding:14px}
+.mcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mcard-name{font-size:12px;color:#8e8e93;font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%}
+.dg{background:#34c759}.dm{background:#ff9500}.db{background:#ff3b30}
+.mcard-val{font-size:30px;font-weight:700;line-height:1;margin-bottom:2px}
+.mcard-unit{font-size:11px;color:#8e8e93}
+.mtag{display:inline-block;margin-top:7px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px}
+.tg{background:#d4f5e2;color:#1a7a45}
+.tm{background:#fff3cd;color:#856404}
+.tb{background:#fde8e8;color:#c0392b}
+
+/* ── CHART CARD ── */
+.chart-card{background:#fff;border-radius:20px;padding:16px;margin-bottom:12px}
+.chart-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.chart-title{font-size:14px;font-weight:600}
+.chart-sub{font-size:11px;color:#8e8e93}
+.chart-wrap{position:relative;width:100%}
+
+/* ── PROMO ── */
+.promo{background:#007AFF;border-radius:20px;padding:16px;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.promo-ico{width:46px;height:46px;background:rgba(255,255,255,.2);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.promo-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px}
+.promo-desc{font-size:12px;color:rgba(255,255,255,.8);line-height:1.4}
+
+/* ── TIP ── */
+.tip-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;display:flex;gap:10px}
+.tip-ico{width:34px;height:34px;border-radius:10px;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tip-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.tip-text{font-size:12px;color:#8e8e93;line-height:1.5}
+
+/* ── STATS PAGE ── */
+.stat-hero{background:#fff;border-radius:20px;padding:16px;margin-bottom:12px}
+.stat-tabs{display:flex;background:#f2f2f7;border-radius:10px;padding:2px;margin-bottom:14px}
+.stat-tab{flex:1;padding:7px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:500;color:#8e8e93;cursor:pointer}
+.stat-tab.active{background:#fff;color:#1c1c1e;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ── BLUETOOTH PAGE ── */
+.bt-hero{background:#fff;border-radius:20px;padding:24px;margin-bottom:12px;text-align:center}
+.bt-ring{width:120px;height:120px;border-radius:50%;background:#f2f2f7;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative}
+.bt-ring::before{content:'';position:absolute;width:140px;height:140px;border-radius:50%;border:2px solid #007AFF;opacity:.3;animation:pulse 2s infinite}
+.bt-ring::after{content:'';position:absolute;width:160px;height:160px;border-radius:50%;border:2px solid #007AFF;opacity:.15;animation:pulse 2s .5s infinite}
+@keyframes pulse{0%{transform:scale(.9);opacity:.4}100%{transform:scale(1.1);opacity:0}}
+.bt-status{font-size:18px;font-weight:700;margin-bottom:6px}
+.bt-sub{font-size:13px;color:#8e8e93;margin-bottom:20px}
+.bt-btn{width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.bt-btn.scan{background:#007AFF;color:#fff}
+.bt-btn.scan:active{background:#0063cc}
+.bt-btn.disconnect{background:#fde8e8;color:#c0392b}
+
+.device-list{margin-bottom:12px}
+.device-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
+.device-card:active{background:#f2f2f7}
+.device-ico{width:44px;height:44px;border-radius:12px;background:#f2f2f7;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.device-ico.connected{background:#d4f5e2}
+.device-info{flex:1}
+.device-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.device-meta{font-size:12px;color:#8e8e93}
+.device-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.signal-bars{display:flex;gap:2px;align-items:flex-end;height:16px}
+.bar{width:4px;border-radius:2px;background:#e5e5ea}
+.bar.on{background:#007AFF}
+.b1{height:5px}.b2{height:8px}.b3{height:11px}.b4{height:14px}
+.conn-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;background:#d4f5e2;color:#1a7a45}
+.scanning-dots{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.sdot{width:8px;height:8px;border-radius:50%;background:#007AFF;animation:bounce .8s infinite}
+.sdot:nth-child(2){animation-delay:.15s}
+.sdot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+
+/* ── NIQOB DATA ── */
+.niqob-data{background:#fff;border-radius:20px;padding:16px;margin-bottom:12px}
+.niqob-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:.5px solid #f2f2f7}
+.niqob-ico{width:50px;height:50px;border-radius:14px;background:#d4f5e2;display:flex;align-items:center;justify-content:center;font-size:26px}
+.niqob-title{font-size:15px;font-weight:700;margin-bottom:2px}
+.niqob-id{font-size:12px;color:#8e8e93}
+.niqob-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.nstat{text-align:center}
+.nstat-val{font-size:20px;font-weight:700;color:#1c1c1e}
+.nstat-lbl{font-size:10px;color:#8e8e93;margin-top:2px}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.filter-card{background:#f2f2f7;border-radius:12px;padding:10px;text-align:center}
+.filter-icon{font-size:20px;margin-bottom:4px}
+.filter-name{font-size:11px;font-weight:600;color:#1c1c1e}
+.filter-life{font-size:10px;color:#8e8e93;margin-top:2px}
+.filter-bar{height:4px;border-radius:2px;background:#e5e5ea;margin-top:6px;overflow:hidden}
+.filter-fill{height:100%;border-radius:2px;background:#34c759}
+
+/* ── SETTINGS ── */
+.settings-section{background:#fff;border-radius:20px;overflow:hidden;margin-bottom:12px}
+.settings-section-title{font-size:12px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px 6px;border-bottom:.5px solid #f2f2f7}
+.setting-row{display:flex;align-items:center;padding:14px 16px;border-bottom:.5px solid #f2f2f7;cursor:pointer;transition:background .15s}
+.setting-row:last-child{border-bottom:none}
+.setting-row:active{background:#f2f2f7}
+.setting-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-right:12px;flex-shrink:0}
+.setting-label{flex:1}
+.setting-title{font-size:15px;color:#1c1c1e}
+.setting-sub{font-size:12px;color:#8e8e93;margin-top:1px}
+.setting-right{display:flex;align-items:center;gap:8px;color:#8e8e93;font-size:14px}
+.toggle{width:51px;height:31px;border-radius:16px;background:#e5e5ea;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0}
+.toggle.on{background:#34c759}
+.toggle::after{content:'';position:absolute;width:27px;height:27px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:22px}
+.chevron{color:#c7c7cc;font-size:18px}
+
+/* ── PROFILE ── */
+.profile-card{background:#fff;border-radius:20px;padding:20px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#007AFF,#5856D6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff}
+.profile-name{font-size:18px;font-weight:700}
+.profile-sub{font-size:13px;color:#8e8e93}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:.5px solid #e5e5ea;display:flex;padding:8px 0 24px;z-index:300}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:#8e8e93;transition:color .2s}
+.nav-item.active{color:#007AFF}
+.nav-ico{font-size:24px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- Status Bar -->
+<div class="statusbar">
+  <div class="statusbar-time" id="clock">9:41</div>
+  <div class="sb-icons">
+    <span>▲▲▲</span>
+    <span>WiFi</span>
+    <div class="battery">88% 🔋</div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-title" id="h-title">Havo Pro</div>
+  <div class="header-right">
+    <button class="icon-btn" id="bt-icon" onclick="goPage('bluetooth')" title="Bluetooth">🔵</button>
+    <button class="icon-btn" onclick="goPage('settings')">⚙️</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ HOME PAGE ════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <!-- Lang -->
+  <div class="lang-row">
+    <div class="seg">
+      <button class="seg-btn active" onclick="setLang('uz')">O'zbek</button>
+      <button class="seg-btn" onclick="setLang('ru')">Русский</button>
+    </div>
+  </div>
+  <!-- City -->
+  <div class="city-scroll">
+    <div class="city-chip active" onclick="setCity('termiz')">📍 Termiz</div>
+    <div class="city-chip" onclick="setCity('tashkent')">📍 Toshkent</div>
+    <div class="city-chip" onclick="setCity('samarkand')">📍 Samarqand</div>
+    <div class="city-chip" onclick="setCity('nukus')">📍 Nukus</div>
+  </div>
+
+  <div class="content">
+    <div class="sec-label" id="lbl-air">Havo holati</div>
+
+    <!-- AQI -->
+    <div class="aqi-card">
+      <div class="aqi-top">
+        <div>
+          <div class="aqi-city-label" id="lbl-city">Shahar</div>
+          <div class="aqi-city-name" id="city-name">Termiz</div>
+          <div class="aqi-badge bad" id="aqi-badge">⚠ Zararli</div>
+        </div>
+        <div class="aqi-right">
+          <div class="aqi-num-lbl">AQI</div>
+          <div class="aqi-big" id="aqi-num" style="color:#ff3b30">158</div>
+        </div>
+      </div>
+      <div class="aqi-bar-bg">
+        <div class="aqi-dot" id="aqi-dot" style="left:52%"></div>
+      </div>
+      <div class="aqi-bar-lbl">
+        <span id="lbl-good">Yaxshi</span>
+        <span id="lbl-mod">O'rtacha</span>
+        <span id="lbl-danger">Xavfli</span>
+      </div>
+      <div class="aqi-status" id="aqi-status" style="color:#ff3b30">⚠ Zararli — Niqob kiyish tavsiya etiladi</div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="sec-label" id="lbl-markers">Real ko'rsatkichlar</div>
+    <div class="mgrid">
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name">PM2.5</span><span class="dot db" id="d-pm25"></span></div>
+        <div class="mcard-val" id="v-pm25">75</div>
+        <div class="mcard-unit">μg/m³</div>
+        <div class="mtag tb" id="t-pm25">Yuqori</div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name">PM10</span><span class="dot db" id="d-pm10"></span></div>
+        <div class="mcard-val" id="v-pm10">120</div>
+        <div class="mcard-unit">μg/m³</div>
+        <div class="mtag tb" id="t-pm10">Yuqori</div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name">CO</span><span class="dot dm" id="d-co"></span></div>
+        <div class="mcard-val" id="v-co">4.2</div>
+        <div class="mcard-unit">mg/m³</div>
+        <div class="mtag tm" id="t-co">O'rtacha</div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name">NO₂</span><span class="dot dm" id="d-no2"></span></div>
+        <div class="mcard-val" id="v-no2">38</div>
+        <div class="mcard-unit">μg/m³</div>
+        <div class="mtag tm" id="t-no2">O'rtacha</div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name" id="lbl-hum">Namlik</span><span class="dot dg" id="d-hum"></span></div>
+        <div class="mcard-val" id="v-hum">42</div>
+        <div class="mcard-unit">%</div>
+        <div class="mtag tg" id="t-hum">Yaxshi</div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top"><span class="mcard-name" id="lbl-temp">Harorat</span><span class="dot dm" id="d-temp"></span></div>
+        <div class="mcard-val" id="v-temp">34</div>
+        <div class="mcard-unit">°C</div>
+        <div class="mtag tm" id="t-temp">Issiq</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="chart-hdr">
+        <div class="chart-title" id="lbl-c1">PM2.5 — 24 soat</div>
+        <div class="chart-sub">μg/m³</div>
+      </div>
+      <div class="chart-wrap" style="height:130px"><canvas id="chart1"></canvas></div>
+    </div>
+
+    <!-- Promo -->
+    <div class="promo" onclick="goPage('bluetooth')">
+      <div class="promo-ico">😷</div>
+      <div>
+        <div class="promo-title" id="p-title">Innovatsion Nafas Niqobi</div>
+        <div class="promo-desc" id="p-desc">Bluetooth orqali ulaning → real vaqt ma'lumot</div>
+      </div>
+    </div>
+
+    <!-- Tip -->
+    <div class="tip-card">
+      <div class="tip-ico">💡</div>
+      <div>
+        <div class="tip-title" id="tip-title">Tavsiya</div>
+        <div class="tip-text" id="tip-text">Hozirgi havo sifati zararli darajada. Niqob kiyish tavsiya etiladi.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ STATS PAGE ════════════════════════════════ -->
+<div class="page" id="page-stats">
+  <div class="content" style="padding-top:20px">
+    <div class="sec-label" id="lbl-stats-title">Statistika</div>
+
+    <div class="stat-hero">
+      <div class="stat-tabs" id="stat-tabs">
+        <button class="stat-tab active" onclick="switchStat(0)">Bugun</button>
+        <button class="stat-tab" onclick="switchStat(1)">Hafta</button>
+        <button class="stat-tab" onclick="switchStat(2)">Oy</button>
+      </div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-stat"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-hdr">
+        <div class="chart-title" id="lbl-c2">Gaz tarkibi</div>
+        <div class="chart-sub" id="c2-city">Termiz</div>
+      </div>
+      <div class="chart-wrap" style="height:150px"><canvas id="chart2"></canvas></div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="mgrid">
+      <div class="mcard" style="grid-column:span 2">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+          <div><div style="font-size:24px;font-weight:700;color:#ff3b30" id="s-max">120</div><div style="font-size:11px;color:#8e8e93" id="s-max-lbl">Maksimum PM10</div></div>
+          <div><div style="font-size:24px;font-weight:700;color:#ff9500" id="s-avg">67</div><div style="font-size:11px;color:#8e8e93" id="s-avg-lbl">O'rtacha AQI</div></div>
+          <div><div style="font-size:24px;font-weight:700;color:#34c759" id="s-min">12</div><div style="font-size:11px;color:#8e8e93" id="s-min-lbl">Minimum PM2.5</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ BLUETOOTH PAGE ════════════════════════════════ -->
+<div class="page" id="page-bluetooth">
+  <div class="content" style="padding-top:20px">
+    <div class="sec-label" id="lbl-bt-title">Niqob ulanish</div>
+
+    <!-- BT Hero -->
+    <div class="bt-hero" id="bt-hero">
+      <div class="bt-ring" id="bt-ring">😷</div>
+      <div class="bt-status" id="bt-status-text">Niqob topilmadi</div>
+      <div class="bt-sub" id="bt-sub-text">Bluetooth orqali Innovatsion Nafas Niqobiga ulaning</div>
+      <button class="bt-btn scan" id="bt-main-btn" onclick="startScan()">🔍 Qurilmalarni qidirish</button>
+    </div>
+
+    <!-- Scanning animation -->
+    <div id="scanning-section" style="display:none;text-align:center;padding:8px 0 16px">
+      <div class="scanning-dots"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+      <div style="font-size:13px;color:#8e8e93" id="lbl-scanning">Qidirilmoqda...</div>
+    </div>
+
+    <!-- Device list -->
+    <div class="device-list" id="device-list" style="display:none">
+      <div class="sec-label" id="lbl-found">Topilgan qurilmalar</div>
+
+      <div class="device-card" id="dev-niqob" onclick="connectDevice('niqob')">
+        <div class="device-ico" id="dev-niqob-ico">😷</div>
+        <div class="device-info">
+          <div class="device-name">Innovatsion Niqob Pro</div>
+          <div class="device-meta" id="dev-niqob-meta">ID: INQ-2026-TRM</div>
+        </div>
+        <div class="device-right">
+          <div class="signal-bars"><div class="bar b1 on"></div><div class="bar b2 on"></div><div class="bar b3 on"></div><div class="bar b4 on"></div></div>
+          <div style="font-size:11px;color:#8e8e93">-42 dBm</div>
+        </div>
+      </div>
+
+      <div class="device-card" onclick="connectDevice('other1')">
+        <div class="device-ico">📱</div>
+        <div class="device-info">
+          <div class="device-name">BLE Device 3A:F2</div>
+          <div class="device-meta">Noma'lum qurilma</div>
+        </div>
+        <div class="device-right">
+          <div class="signal-bars"><div class="bar b1 on"></div><div class="bar b2 on"></div><div class="bar b3"></div><div class="bar b4"></div></div>
+          <div style="font-size:11px;color:#8e8e93">-71 dBm</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connected niqob data -->
+    <div id="niqob-connected" style="display:none">
+      <div class="niqob-data">
+        <div class="niqob-header">
+          <div class="niqob-ico">😷</div>
+          <div>
+            <div class="niqob-title">Innovatsion Niqob Pro</div>
+            <div class="niqob-id" id="niqob-id">ID: INQ-2026-TRM • Ulangan ✓</div>
+          </div>
+        </div>
+        <div class="niqob-stats">
+          <div class="nstat">
+            <div class="nstat-val" style="color:#34c759" id="n-bat">87%</div>
+            <div class="nstat-lbl" id="lbl-nbat">Batareya</div>
+          </div>
+          <div class="nstat">
+            <div class="nstat-val" style="color:#007AFF" id="n-filter">73%</div>
+            <div class="nstat-lbl" id="lbl-nfilter">Filtr holati</div>
+          </div>
+          <div class="nstat">
+            <div class="nstat-val" style="color:#ff9500" id="n-worn">4.2</div>
+            <div class="nstat-lbl" id="lbl-nworn">Soat/kun</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-card">
+            <div class="filter-icon">🔴</div>
+            <div class="filter-name">HEPA</div>
+            <div class="filter-life" id="f1-life">73% qoldi</div>
+            <div class="filter-bar"><div class="filter-fill" style="width:73%;background:#34c759"></div></div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-icon">🟠</div>
+            <div class="filter-name" id="f2-name">Faol uglerod</div>
+            <div class="filter-life" id="f2-life">45% qoldi</div>
+            <div class="filter-bar"><div class="filter-fill" style="width:45%;background:#ff9500"></div></div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-icon">🔵</div>
+            <div class="filter-name" id="f3-name">Antibakterial</div>
+            <div class="filter-life" id="f3-life">88% qoldi</div>
+            <div class="filter-bar"><div class="filter-fill" style="width:88%;background:#34c759"></div></div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-icon">🟢</div>
+            <div class="filter-name" id="f4-name">O₂ modul</div>
+            <div class="filter-life" id="f4-life">91% qoldi</div>
+            <div class="filter-bar"><div class="filter-fill" style="width:91%;background:#34c759"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live readings from mask -->
+      <div class="chart-card">
+        <div class="chart-hdr">
+          <div class="chart-title" id="lbl-live">Niqob ichidagi havo</div>
+          <div class="chart-sub" style="color:#34c759">● Live</div>
+        </div>
+        <div class="chart-wrap" style="height:120px"><canvas id="chart-live"></canvas></div>
+      </div>
+
+      <button class="bt-btn disconnect" onclick="disconnectDevice()" style="width:100%;margin-bottom:12px" id="disc-btn">
+        Ulanishni uzish
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ SETTINGS PAGE ════════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="content" style="padding-top:20px">
+
+    <!-- Profile -->
+    <div class="profile-card">
+      <div class="avatar">TH</div>
+      <div class="profile-name">Toshniyozov Hasan</div>
+      <div class="profile-sub" id="prof-sub">Termiz, O'zbekiston</div>
+    </div>
+
+    <!-- Niqob settings -->
+    <div class="settings-section">
+      <div class="settings-section-title" id="lbl-niqob-set">Niqob sozlamalari</div>
+      <div class="setting-row" onclick="goPage('bluetooth')">
+        <div class="setting-ico" style="background:#d4f5e2">😷</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-bt">Bluetooth ulanish</div>
+          <div class="setting-sub" id="set-bt-sub">Niqob Pro • Ulangan</div>
+        </div>
+        <div class="setting-right"><span style="color:#34c759;font-size:12px;font-weight:600">●</span><span class="chevron">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#fff3cd">🔔</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-alert">Ogohlantirish chegarasi</div>
+          <div class="setting-sub">AQI > 100</div>
+        </div>
+        <div class="setting-right"><span class="chevron">›</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#fde8e8">🔴</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-filter">Filtr almashtirish eslatmasi</div>
+          <div class="setting-sub" id="set-filter-sub">30 kunda bir marta</div>
+        </div>
+        <div class="setting-right"><span class="chevron">›</span></div>
+      </div>
+    </div>
+
+    <!-- Ilova sozlamalari -->
+    <div class="settings-section">
+      <div class="settings-section-title" id="lbl-app-set">Ilova sozlamalari</div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#e8f0fe">🌐</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-lang">Til</div>
+          <div class="setting-sub" id="set-lang-val">O'zbek</div>
+        </div>
+        <div class="setting-right"><span class="chevron">›</span></div>
+      </div>
+      <div class="setting-row" onclick="toggleSetting(this)">
+        <div class="setting-ico" style="background:#fff3cd">🔔</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-notif">Bildirishnomalar</div>
+        </div>
+        <div class="setting-right"><div class="toggle on" onclick="this.classList.toggle('on');event.stopPropagation()"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" onclick="this.classList.toggle('on');event.stopPropagation()" style="background:#e8ffe8">📍</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-loc">Joylashuvdan foydalanish</div>
+        </div>
+        <div class="setting-right"><div class="toggle on" onclick="this.classList.toggle('on');event.stopPropagation()"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#f2f2f7">🌙</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-dark">Tungi rejim</div>
+        </div>
+        <div class="setting-right"><div class="toggle" onclick="this.classList.toggle('on');event.stopPropagation()"></div></div>
+      </div>
+    </div>
+
+    <!-- Ma'lumot -->
+    <div class="settings-section">
+      <div class="settings-section-title" id="lbl-about">Ilova haqida</div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#f2f2f7">ℹ️</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-ver">Versiya</div>
+          <div class="setting-sub">1.0.0 • 2026</div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#d4f5e2">👨‍💻</div>
+        <div class="setting-label">
+          <div class="setting-title">Ishlab chiqaruvchi</div>
+          <div class="setting-sub">Toshniyozov Hasan</div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-ico" style="background:#e8f0fe">📧</div>
+        <div class="setting-label">
+          <div class="setting-title" id="set-contact">Murojaat</div>
+          <div class="setting-sub">[TO'LDIRING: email]</div>
+        </div>
+        <div class="setting-right"><span class="chevron">›</span></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:#8e8e93;padding:8px 0 20px">© 2026 Innovatsion Nafas Niqobi</div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="goPage('home')" id="nav-home">
+    <div class="nav-ico">🏠</div>
+    <div class="nav-lbl" id="lbl-nav1">Bosh</div>
+  </div>
+  <div class="nav-item" onclick="goPage('stats')" id="nav-stats">
+    <div class="nav-ico">📊</div>
+    <div class="nav-lbl" id="lbl-nav2">Statistika</div>
+  </div>
+  <div class="nav-item" onclick="goPage('bluetooth')" id="nav-bluetooth">
+    <div class="nav-ico">😷</div>
+    <div class="nav-lbl" id="lbl-nav3">Niqob</div>
+  </div>
+  <div class="nav-item" onclick="goPage('settings')" id="nav-settings">
+    <div class="nav-ico">⚙️</div>
+    <div class="nav-lbl" id="lbl-nav4">Sozlama</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── DATA ──────────────────────────────────────────
+const cities={
+  termiz:{uz:'Termiz',ru:'Термиз',pm25:75,pm10:120,co:4.2,no2:38,hum:42,temp:34,aqi:158,aqiPct:52,
+    pm25L:2,pm10L:2,coL:1,no2L:1,humL:0,tempL:1,aqiL:2,
+    daily:[45,60,80,95,75,68,72,90,110,75,62,58]},
+  tashkent:{uz:'Toshkent',ru:'Ташкент',pm25:35,pm10:55,co:2.1,no2:52,hum:55,temp:28,aqi:88,aqiPct:28,
+    pm25L:1,pm10L:1,coL:0,no2L:1,humL:0,tempL:1,aqiL:1,
+    daily:[20,30,40,55,50,38,35,42,55,35,28,22]},
+  samarkand:{uz:'Samarqand',ru:'Самарканд',pm25:18,pm10:30,co:1.1,no2:22,hum:62,temp:25,aqi:52,aqiPct:15,
+    pm25L:0,pm10L:0,coL:0,no2L:0,humL:0,tempL:1,aqiL:0,
+    daily:[12,15,20,28,22,18,16,20,25,18,14,12]},
+  nukus:{uz:'Nukus',ru:'Нукус',pm25:55,pm10:90,co:3.1,no2:30,hum:28,temp:31,aqi:130,aqiPct:42,
+    pm25L:2,pm10L:2,coL:1,no2L:0,humL:1,tempL:1,aqiL:2,
+    daily:[38,48,65,80,60,55,58,72,88,62,48,40]}
+};
+
+const T={
+  uz:{
+    air:'Havo holati',markers:"Real ko'rsatkichlar",city:'Shahar',
+    good:'Yaxshi',mod:"O'rtacha",danger:'Xavfli',
+    hum:'Namlik',temp:'Harorat',c1:'PM2.5 — 24 soat',
+    pTitle:'Innovatsion Nafas Niqobi',pDesc:"Bluetooth orqali ulaning → real vaqt ma'lumot",
+    tipTitle:'Tavsiya',
+    statsTitle:'Statistika',c2:'Gaz tarkibi',
+    btTitle:'Niqob ulanish',btStatus:'Niqob topilmadi',
+    btSub:'Bluetooth orqali Innovatsion Nafas Niqobiga ulaning',
+    btBtn:'🔍 Qurilmalarni qidirish',scanning:'Qidirilmoqda...',
+    found:'Topilgan qurilmalar',
+    nbat:'Batareya',nfilter:'Filtr holati',nworn:'Soat/kun',
+    f2:'Faol uglerod',f3:'Antibakterial',f4:'O₂ modul',
+    live:'Niqob ichidagi havo',disc:'Ulanishni uzish',
+    niqobSet:'Niqob sozlamalari',appSet:'Ilova sozlamalari',about:'Ilova haqida',
+    setBt:'Bluetooth ulanish',setBtSub:'Niqob Pro • Ulangan',
+    setAlert:'Ogohlantirish chegarasi',setFilter:'Filtr almashtirish eslatmasi',
+    setFilterSub:'30 kunda bir marta',setLang:'Til',setLangVal:"O'zbek",
+    setNotif:'Bildirishnomalar',setLoc:'Joylashuvdan foydalanish',
+    setDark:'Tungi rejim',setVer:'Versiya',setContact:'Murojaat',
+    profSub:"Termiz, O'zbekiston",
+    sMaxLbl:'Maksimum PM10',sAvgLbl:"O'rtacha AQI",sMinLbl:'Minimum PM2.5',
+    nav:['Bosh','Statistika','Niqob','Sozlama'],
+    aqiBadge:{0:'✓ Yaxshi',1:"⚡ O'rtacha",2:'⚠ Zararli'},
+    aqiStatus:{0:'✓ Havo sifati yaxshi',1:"⚡ Ehtiyot bo'ling",2:'⚠ Zararli — Niqob kiyish tavsiya etiladi'},
+    tips:{termiz:"PM2.5 normadan 3–5 barobar yuqori. Innovatsion niqob kiyish tavsiya etiladi.",
+          tashkent:"Havo sifati o'rtacha. Uzoq sayr paytida niqob tavsiya etiladi.",
+          samarkand:"Havo sifati qoniqarli. Ehtiyot choralarini ko'ring.",
+          nukus:"PM10 darajasi yuqori. Shamol tufayli chang ko'payishi mumkin."}
+  },
+  ru:{
+    air:'Качество воздуха',markers:'Показатели',city:'Город',
+    good:'Хорошо',mod:'Средне',danger:'Опасно',
+    hum:'Влажность',temp:'Температура',c1:'PM2.5 — 24 часа',
+    pTitle:'Инновационная маска',pDesc:'Подключите по Bluetooth → данные в реальном времени',
+    tipTitle:'Рекомендация',
+    statsTitle:'Статистика',c2:'Состав газов',
+    btTitle:'Подключение маски',btStatus:'Маска не найдена',
+    btSub:'Подключитесь к Инновационной маске через Bluetooth',
+    btBtn:'🔍 Найти устройства',scanning:'Поиск...',
+    found:'Найденные устройства',
+    nbat:'Батарея',nfilter:'Фильтр',nworn:'Часов/день',
+    f2:'Активный уголь',f3:'Антибактериальный',f4:'O₂ модуль',
+    live:'Воздух внутри маски',disc:'Отключить',
+    niqobSet:'Настройки маски',appSet:'Настройки приложения',about:'О приложении',
+    setBt:'Bluetooth подключение',setBtSub:'Маска Pro • Подключено',
+    setAlert:'Порог оповещения',setFilter:'Напоминание о замене фильтра',
+    setFilterSub:'Раз в 30 дней',setLang:'Язык',setLangVal:'Русский',
+    setNotif:'Уведомления',setLoc:'Использование геолокации',
+    setDark:'Ночной режим',setVer:'Версия',setContact:'Контакт',
+    profSub:'Термиз, Узбекистан',
+    sMaxLbl:'Макс. PM10',sAvgLbl:'Средний AQI',sMinLbl:'Мин. PM2.5',
+    nav:['Главная','Статистика','Маска','Настройки'],
+    aqiBadge:{0:'✓ Хорошо',1:'⚡ Средне',2:'⚠ Вредно'},
+    aqiStatus:{0:'✓ Качество воздуха хорошее',1:'⚡ Будьте осторожны',2:'⚠ Вредно — рекомендуется маска'},
+    tips:{termiz:"PM2.5 превышает норму в 3–5 раз. Рекомендуется инновационная маска.",
+          tashkent:"Качество воздуха среднее. Маска рекомендуется при долгих прогулках.",
+          samarkand:"Качество воздуха удовлетворительное. Соблюдайте меры предосторожности.",
+          nukus:"Уровень PM10 повышен. Возможно усиление пыли из-за ветра."}
+  }
+};
+
+const hours=['00','02','04','06','08','10','12','14','16','18','20','22'];
+const dotCls=['dg','dm','db'];
+const tagCls=['tg','tm','tb'];
+const aqiClr=['#34c759','#ff9500','#ff3b30'];
+const aqiBadgeCls=['good','mod','bad'];
+
+let lang='uz',city='termiz',curPage='home',btState='idle',liveChart=null;
+let chart1,chartStat,chart2;
+
+// ── PAGE NAV ──────────────────────────────────────
+function goPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const navMap={home:'nav-home',stats:'nav-stats',bluetooth:'nav-bluetooth',settings:'nav-settings'};
+  if(navMap[p]) document.getElementById(navMap[p]).classList.add('active');
+  curPage=p;
+  const titles={home:'Havo Pro',stats:T[lang].statsTitle,bluetooth:T[lang].btTitle,settings:T[lang].appSet};
+  document.getElementById('h-title').textContent=titles[p]||'Havo Pro';
+  if(p==='stats') initStatCharts();
+}
+
+// ── LANG / CITY ───────────────────────────────────
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.seg-btn').forEach((b,i)=>b.classList.toggle('active',(l==='uz'&&i===0)||(l==='ru'&&i===1)));
+  update();
+}
+function setCity(c){
+  city=c;
+  const map={termiz:'Termiz',tashkent:'Toshkent',samarkand:'Samarqand',nukus:'Nukus'};
+  document.querySelectorAll('.city-chip').forEach(b=>b.classList.toggle('active',b.textContent.includes(map[c])));
+  update();
+}
+
+// ── UPDATE UI ─────────────────────────────────────
+function s(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function update(){
+  const t=T[lang],d=cities[city];
+  s('lbl-air',t.air);s('lbl-markers',t.markers);s('lbl-city',t.city);
+  s('lbl-good',t.good);s('lbl-mod',t.mod);s('lbl-danger',t.danger);
+  s('lbl-hum',t.hum);s('lbl-temp',t.temp);s('lbl-c1',t.c1);
+  s('p-title',t.pTitle);s('p-desc',t.pDesc);s('tip-title',t.tipTitle);s('tip-text',t.tips[city]);
+  s('lbl-stats-title',t.statsTitle);s('lbl-c2',t.c2);s('c2-city',lang==='uz'?d.uz:d.ru);
+  s('lbl-bt-title',t.btTitle);
+  if(btState==='idle'){s('bt-status-text',t.btStatus);s('bt-sub-text',t.btSub);document.getElementById('bt-main-btn').textContent=t.btBtn;}
+  s('lbl-scanning',t.scanning);s('lbl-found',t.found);
+  s('lbl-nbat',t.nbat);s('lbl-nfilter',t.nfilter);s('lbl-nworn',t.nworn);
+  s('f2-name',t.f2);s('f3-name',t.f3);s('f4-name',t.f4);
+  s('lbl-live',t.live);s('disc-btn',t.disc);
+  s('lbl-niqob-set',t.niqobSet);s('lbl-app-set',t.appSet);s('lbl-about',t.about);
+  s('set-bt',t.setBt);s('set-bt-sub',t.setBtSub);s('set-alert',t.setAlert);
+  s('set-filter',t.setFilter);s('set-filter-sub',t.setFilterSub);
+  s('set-lang',t.setLang);s('set-lang-val',t.setLangVal);
+  s('set-notif',t.setNotif);s('set-loc',t.setLoc);s('set-dark',t.setDark);
+  s('set-ver',t.setVer);s('set-contact',t.setContact);s('prof-sub',t.profSub);
+  s('s-max-lbl',t.sMaxLbl);s('s-avg-lbl',t.sAvgLbl);s('s-min-lbl',t.sMinLbl);
+  t.nav.forEach((n,i)=>s('lbl-nav'+(i+1),n));
+  document.getElementById('h-title').textContent=
+    curPage==='home'?'Havo Pro':curPage==='stats'?t.statsTitle:curPage==='bluetooth'?t.btTitle:t.appSet;
+
+  // AQI
+  s('city-name',lang==='uz'?d.uz:d.ru);
+  s('aqi-num',d.aqi);
+  document.getElementById('aqi-num').style.color=aqiClr[d.aqiL];
+  document.getElementById('aqi-dot').style.left=d.aqiPct+'%';
+  const badge=document.getElementById('aqi-badge');
+  badge.textContent=t.aqiBadge[d.aqiL];badge.className='aqi-badge '+aqiBadgeCls[d.aqiL];
+  document.getElementById('aqi-status').textContent=t.aqiStatus[d.aqiL];
+  document.getElementById('aqi-status').style.color=aqiClr[d.aqiL];
+
+  // Stats summary
+  s('s-max',d.pm10);s('s-avg',d.aqi);s('s-min',d.pm25);
+
+  // Metrics
+  const rows=[
+    ['v-pm25','t-pm25','d-pm25',d.pm25,d.pm25L,['tg','tm','tb'],['dg','dm','db']],
+    ['v-pm10','t-pm10','d-pm10',d.pm10,d.pm10L,['tg','tm','tb'],['dg','dm','db']],
+    ['v-co','t-co','d-co',d.co,d.coL,['tg','tm','tb'],['dg','dm','db']],
+    ['v-no2','t-no2','d-no2',d.no2,d.no2L,['tg','tm','tb'],['dg','dm','db']],
+    ['v-hum','t-hum','d-hum',d.hum,d.humL,['tg','tm','tb'],['dg','dm','db']],
+    ['v-temp','t-temp','d-temp',d.temp,d.tempL,['tg','tm','tb'],['dg','dm','db']],
+  ];
+  const tagLabels=[[t.good,t.mod,t.mod],[t.good,t.mod,t.mod],[t.good,t.mod,t.mod],
+                   [t.good,t.mod,t.mod],[t.good,t.mod,t.mod],[t.good,t.mod,'Issiq']];
+  rows.forEach(([vid,tid,did,val,lv,tc,dc],i)=>{
+    const ve=document.getElementById(vid);
+    if(ve)ve.textContent=typeof val==='number'&&!Number.isInteger(val)?val.toFixed(1):val;
+    const te=document.getElementById(tid);if(te){te.textContent=tagLabels[i][lv];te.className='mtag '+tc[lv];}
+    const de=document.getElementById(did);if(de)de.className='dot '+dc[lv];
+  });
+
+  if(chart1){chart1.data.datasets[0].data=d.daily;chart1.update();}
+}
+
+// ── CHARTS ────────────────────────────────────────
+function initCharts(){
+  const d=cities.termiz;
+  chart1=new Chart(document.getElementById('chart1'),{
+    type:'line',
+    data:{labels:hours,datasets:[{data:d.daily,borderColor:'#ff3b30',
+      backgroundColor:'rgba(255,59,48,0.08)',borderWidth:2,pointRadius:0,fill:true,tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#8e8e93',font:{size:9}},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
+              y:{ticks:{color:'#8e8e93',font:{size:9}},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}
+  });
+}
+
+function initStatCharts(){
+  if(chartStat&&chart2) return;
+  const d=cities[city];
+  chartStat=new Chart(document.getElementById('chart-stat'),{
+    type:'bar',
+    data:{labels:hours,datasets:[{data:d.daily,backgroundColor:'rgba(0,122,255,0.7)',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#8e8e93',font:{size:9}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#8e8e93',font:{size:9}},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}
+  });
+  chart2=new Chart(document.getElementById('chart2'),{
+    type:'bar',
+    data:{labels:['PM2.5','PM10','CO×10','NO₂'],
+      datasets:[{data:[d.pm25,d.pm10,Math.round(d.co*10),d.no2],
+        backgroundColor:['#ff3b30','#ff9500','#007AFF','#34c759'],borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#8e8e93',font:{size:11}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#8e8e93',font:{size:9}},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}
+  });
+}
+
+function switchStat(idx){
+  document.querySelectorAll('.stat-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  if(!chartStat) return;
+  const d=cities[city];
+  const weekData=[25,42,68,55,38,72,90];
+  const monData=[30,45,58,40,65,55,48,72,80,60,42,35,50,62,70,45,38,55,68,75,50,40,35,60,70,55,42,38,48,65];
+  const wkLabels=['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+  const monLabels=Array.from({length:30},(_,i)=>i+1+'');
+  if(idx===0){chartStat.data.labels=hours;chartStat.data.datasets[0].data=d.daily;}
+  else if(idx===1){chartStat.data.labels=wkLabels;chartStat.data.datasets[0].data=weekData;}
+  else{chartStat.data.labels=monLabels;chartStat.data.datasets[0].data=monData;}
+  chartStat.update();
+}
+
+// ── BLUETOOTH ─────────────────────────────────────
+function startScan(){
+  btState='scanning';
+  document.getElementById('bt-main-btn').style.display='none';
+  document.getElementById('scanning-section').style.display='block';
+  document.getElementById('device-list').style.display='none';
+  document.getElementById('niqob-connected').style.display='none';
+  setTimeout(()=>{
+    document.getElementById('scanning-section').style.display='none';
+    document.getElementById('device-list').style.display='block';
+    btState='found';
+  },2500);
+}
+
+function connectDevice(id){
+  if(id!=='niqob') return;
+  document.getElementById('device-list').style.display='none';
+  document.getElementById('scanning-section').style.display='block';
+  document.getElementById('lbl-scanning').textContent=lang==='uz'?'Ulanilmoqda...':'Подключение...';
+  setTimeout(()=>{
+    document.getElementById('scanning-section').style.display='none';
+    document.getElementById('niqob-connected').style.display='block';
+    document.getElementById('bt-ring').style.background='#d4f5e2';
+    document.getElementById('bt-status-text').textContent=lang==='uz'?'Niqob ulangan ✓':'Маска подключена ✓';
+    document.getElementById('bt-status-text').style.color='#1a7a45';
+    document.getElementById('bt-sub-text').textContent=lang==='uz'?'ID: INQ-2026-TRM • Signal kuchli':'ID: INQ-2026-TRM • Сигнал хороший';
+    document.getElementById('bt-main-btn').style.display='none';
+    document.getElementById('bt-icon').textContent='🟢';
+    btState='connected';
+    initLiveChart();
+  },1800);
+}
+
+function disconnectDevice(){
+  document.getElementById('niqob-connected').style.display='none';
+  document.getElementById('bt-ring').style.background='#f2f2f7';
+  document.getElementById('bt-status-text').textContent=T[lang].btStatus;
+  document.getElementById('bt-status-text').style.color='#1c1c1e';
+  document.getElementById('bt-sub-text').textContent=T[lang].btSub;
+  document.getElementById('bt-main-btn').style.display='block';
+  document.getElementById('bt-main-btn').textContent=T[lang].btBtn;
+  document.getElementById('bt-icon').textContent='🔵';
+  btState='idle';
+  if(liveChart){liveChart.destroy();liveChart=null;}
+}
+
+function initLiveChart(){
+  const liveData=Array.from({length:20},()=>Math.round(8+Math.random()*12));
+  const liveLabels=Array.from({length:20},(_,i)=>i+'s');
+  liveChart=new Chart(document.getElementById('chart-live'),{
+    type:'line',
+    data:{labels:liveLabels,datasets:[{data:liveData,borderColor:'#34c759',
+      backgroundColor:'rgba(52,199,89,0.1)',borderWidth:2,pointRadius:0,fill:true,tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{display:false},y:{ticks:{color:'#8e8e93',font:{size:9}},
+              grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},min:0,max:35}}}
+  });
+  setInterval(()=>{
+    if(!liveChart) return;
+    liveChart.data.datasets[0].data.push(Math.round(8+Math.random()*12));
+    liveChart.data.datasets[0].data.shift();
+    liveChart.update('none');
+  },1000);
+}
+
+// ── CLOCK ─────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes();
+}
+tick();setInterval(tick,1000);
+
+// ── INIT ──────────────────────────────────────────
+window.addEventListener('load',()=>{initCharts();update();});
+</script>
+</body>
+</html>
